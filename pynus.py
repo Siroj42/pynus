@@ -9,15 +9,23 @@ NUS_SERVICE_UUID      = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 NUS_CHARACTERISTIC_RX = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
 NUS_CHARACTERISTIC_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
 
-def scan_device(adapter):
+def scan_device(adapter, device_name, device_address):
     with adapter.scan() as scanner:
         for device in scanner:
+            if device_name and device_name != device.name:
+                continue
+            if device_address and device_address != device.address:
+                continue
             if NUS_SERVICE_UUID in device.UUIDs:
                 return device
 
-def lookup_device(adapter):
+def lookup_device(adapter, device_name, device_address):
     for device in adapter.devices():
         if NUS_SERVICE_UUID in device.UUIDs:
+            if device_name and device_name != device.name:
+                continue
+            if device_address and device_address != device.address:
+                continue
             return device
 
 def run_terminal(rx):
@@ -44,13 +52,20 @@ def on_notify(characteristic, value):
     sys.stdout.flush()
 
 def nus():
+    device_name = None
+    device_address = None
+
+    if sys.argv[1] == "--device":
+        device_name = sys.argv[2]
+    elif sys.argv[1] == "--address":
+        device_address = sys.argv[2]
     adapter = tealblue.TealBlue().find_adapter()
 
     # TODO: notify if scanning
-    device = lookup_device(adapter)
+    device = lookup_device(adapter, device_name, device_address)
     if not device:
         print('Scanning...')
-        device = scan_device(adapter)
+        device = scan_device(adapter, device_name, device_address)
     if not device.connected:
         print('Connecting to %s (%s)...' % (device.name, device.address))
         device.connect()
