@@ -35,9 +35,12 @@ def run_terminal(rx):
         while True:
             s = sys.stdin.buffer.read1(20)
             s = s.replace(b'\n', b'\r')
-            if s == b'\x18': # Ctrl-X: exit terminal
+            if s == b'\x18': # Ctrl-X: exit terminal    exitstatus). If 'withexitstatus' is false then this returns just
+
                 return
             rx.write(s)
+            with open("./file.txt", "bw+") as f:
+                f.write(s)
     except tealblue.NotConnectedError:
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old_mode)
         print('lost connection', file=sys.stderr)
@@ -55,10 +58,11 @@ def nus():
     device_name = None
     device_address = None
 
-    if sys.argv[1] == "--device":
-        device_name = sys.argv[2]
-    elif sys.argv[1] == "--address":
-        device_address = sys.argv[2]
+    if len(sys.argv) > 1:
+    	if sys.argv[1] == "--device":
+            device_name = sys.argv[2]
+    	elif sys.argv[1] == "--address":
+            device_address = sys.argv[2]
     adapter = tealblue.TealBlue().find_adapter()
 
     # TODO: notify if scanning
